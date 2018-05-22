@@ -11,6 +11,9 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 from torchvision import models
+import matplotlib.pyplot as plt
+from matplotlib.colors import hsv_to_rgb
+import matplotlib.cm as cm
 
 
 def convert_to_grayscale(cv2im):
@@ -47,8 +50,19 @@ def save_gradient_images(gradient, file_name):
     path_to_file = os.path.join('../results', file_name + '.jpg')
     # Convert RBG to GBR
     gradient = gradient[..., ::-1]
-    cv2.imwrite(path_to_file, gradient)
+    #print(gradient.shape)
+    if(gradient.shape[2]==1):
+        gradient.reshape((gradient.shape[0],gradient.shape[1]))
+        #gradient=np.squeeze(gradient, axis=(2,)).shape
+        gradient=gradient.reshape((gradient.shape[0],gradient.shape[1]))
+        plt.imshow(gradient,cmap='gray')
+        plt.show()
+        cv2.imwrite(path_to_file, gradient)
 
+    else:
+        cv2.imwrite(path_to_file, gradient)
+        plt.imshow(gradient)
+        plt.show()
 
 def save_class_activation_on_image(org_img, activation_map, file_name):
     """
@@ -64,16 +78,27 @@ def save_class_activation_on_image(org_img, activation_map, file_name):
     # Grayscale activation map
     path_to_file = os.path.join('../results', file_name+'_Cam_Grayscale.jpg')
     cv2.imwrite(path_to_file, activation_map)
+    print('activation_map')
+    plt.imshow(activation_map)
+    plt.show()
     # Heatmap of activation map
     activation_heatmap = cv2.applyColorMap(activation_map, cv2.COLORMAP_HSV)
     path_to_file = os.path.join('../results', file_name+'_Cam_Heatmap.jpg')
     cv2.imwrite(path_to_file, activation_heatmap)
+    print('activation_heatmap')
+    plt.imshow(activation_heatmap)
+    plt.show()
     # Heatmap on picture
     org_img = cv2.resize(org_img, (224, 224))
     img_with_heatmap = np.float32(activation_heatmap) + np.float32(org_img)
     img_with_heatmap = img_with_heatmap / np.max(img_with_heatmap)
     path_to_file = os.path.join('../results', file_name+'_Cam_On_Image.jpg')
     cv2.imwrite(path_to_file, np.uint8(255 * img_with_heatmap))
+    print('activation_heatmap on image')
+
+    a=hsv_to_rgb(255*img_with_heatmap)
+    plt.imshow(img_with_heatmap)
+    plt.show()
 
 
 def preprocess_image(cv2im, resize_im=True):
@@ -91,7 +116,7 @@ def preprocess_image(cv2im, resize_im=True):
     std = [0.229, 0.224, 0.225]
     # Resize image
     if resize_im:
-        cv2im = cv2.resize(cv2im, (224, 224))
+        cv2im = cv2.resize(cv2im, (224,224))
     im_as_arr = np.float32(cv2im)
     im_as_arr = np.ascontiguousarray(im_as_arr[..., ::-1])
     im_as_arr = im_as_arr.transpose(2, 0, 1)  # Convert array to D,W,H

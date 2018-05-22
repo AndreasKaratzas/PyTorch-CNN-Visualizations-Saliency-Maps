@@ -10,6 +10,7 @@ import numpy as np
 import torch
 from torch.optim import SGD
 from torchvision import models
+import matplotlib.pyplot as plt
 
 from misc_functions import preprocess_image, recreate_image
 
@@ -75,6 +76,8 @@ class CNNLayerVisualization():
                 cv2.imwrite('../generated/layer_vis_l' + str(self.selected_layer) +
                             '_f' + str(self.selected_filter) + '_iter'+str(i)+'.jpg',
                             self.created_image)
+                plt.imshow(self.created_image)
+                plt.show()
 
     def visualise_layer_without_hooks(self):
         # Process image and return variable
@@ -114,6 +117,9 @@ class CNNLayerVisualization():
                 cv2.imwrite('../generated/layer_vis_l' + str(self.selected_layer) +
                             '_f' + str(self.selected_filter) + '_iter'+str(i)+'.jpg',
                             self.created_image)
+                plt.imshow(self.created_image)
+                print(i)
+                plt.show()
 
 
 if __name__ == '__main__':

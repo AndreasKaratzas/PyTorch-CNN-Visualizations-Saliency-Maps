@@ -23,13 +23,22 @@ class GuidedBackprop():
         self.model.eval()
         self.update_relus()
         self.hook_layers()
+       # self.iterate()
+
+   
+
 
     def hook_layers(self):
         def hook_function(module, grad_in, grad_out):
             self.gradients = grad_in[0]
 
         # Register hook to the first layer
-        first_layer = list(self.model.features._modules.items())[0][1]
+
+        try:
+            first_layer = list(self.model.features._modules.items())[0][1]
+        except:
+            first_layer = list(self.model._modules.items())[0][1]
+
         first_layer.register_backward_hook(hook_function)
 
     def update_relus(self):
@@ -43,9 +52,20 @@ class GuidedBackprop():
             if isinstance(module, ReLU):
                 return (torch.clamp(grad_in[0], min=0.0),)
         # Loop through layers, hook up ReLUs with relu_hook_function
-        for pos, module in self.model.features._modules.items():
+        def hook_iter(module):
+           # print('hook_iter')
             if isinstance(module, ReLU):
-                module.register_backward_hook(relu_hook_function)
+                    module.register_backward_hook(relu_hook_function)
+                    #print('hook_iter')
+
+        try:
+            for pos, module in self.model.features._modules.items():
+                module.apply(hook_iter)
+               
+        except:
+             for pos, module in self.model._modules.items():
+                 module.apply(hook_iter)
+               
 
     def generate_gradients(self, input_image, target_class):
         # Forward pass
@@ -53,8 +73,13 @@ class GuidedBackprop():
         # Zero gradients
         self.model.zero_grad()
         # Target for backprop
+       # print('model_ output ....',model_output)
+        #print('model_ output ....',model_output.mean())
         one_hot_output = torch.FloatTensor(1, model_output.size()[-1]).zero_()
+        #print('one_hot_output....',one_hot_output)
+        #print('one_hot_output....',one_hot_output.mean())
         one_hot_output[0][target_class] = 1
+        #print('one_hot_output....',one_hot_output)
         # Backward pass
         model_output.backward(gradient=one_hot_output)
         # Convert Pytorch variable to numpy array
