@@ -17,97 +17,124 @@ class CamExtractor():
         Extracts cam features from the model
     """
 
-    def __init__(self, model, target_layer):
+    def __init__(self, model, target_layer,req_max_pool_at_end):
         self.model = model
         self.target_layer = target_layer
+        self.req_max_pool_at_end=req_max_pool_at_end
         self.gradients = None
         self.flag=0
+        self.conv_output=None
+        self.k=0
 
-    def save_gradient(self, grad):
-        self.gradients = grad
+    def save_gradient(self,module,gradin,gradout):
+
+        self.gradients = gradout[0]
+
+
+    def save_conv(self,module, input, output):
+
+        self.conv_output=output
+
+    def set_hooks(self):
+        ''' iterates through seqeuntial and module list using reccursion to reach required layers and assign hook functions to compute
+        gradient and save output at the layer '''
+
+        if hasattr(self.model, 'features'):
+
+            for module_pos, module in self.model.features._modules.items():
+
+                def reach_layer(m):
+                    if type(m)==torch.nn.modules.conv.Conv2d or type(m)==torch.nn.modules.batchnorm.BatchNorm2d or type(m)== torch.nn.modules.activation.ReLU or type(m)==torch.nn.modules.pooling.MaxPool2d:
+
+                        if self.k == self.target_layer:
+                            m.register_forward_hook(self.save_conv)
+                            m.register_backward_hook(self.save_gradient)
+                        self.k+=1
+                    else:
+                        try:
+                            for i in m.children():
+                                reach_layer(i)
+                        except:
+                            for i in len(m):
+                                reach_layer(m[i])
+
+                reach_layer(module)
+
+        else:
+            for module_pos, module in self.model._modules.items():
+
+                def reach_layer(m):
+                    if type(m)==torch.nn.modules.conv.Conv2d or type(m)==torch.nn.modules.batchnorm.BatchNorm2d or type(m)== torch.nn.modules.activation.ReLU or type(m)==torch.nn.modules.pooling.MaxPool2d:
+
+                        if self.k == self.target_layer:
+                            m.register_forward_hook(self.save_conv)
+                            m.register_backward_hook(self.save_gradient)
+                        self.k+=1
+                    else:
+                        try:
+                            for i in m.children():
+                                reach_layer(i)
+                        except:
+                            for i in len(m):
+                                reach_layer(m[i])
+
+                reach_layer(module)
+
 
     def forward_pass_on_convolutions(self, x):
         """
             Does a forward pass on convolutions, hooks the function at given layer
         """
         conv_output = None
-        try:
+        if hasattr(self.model, 'features'):
             j=0
-            print(len(self.model.features._modules.items()))
             for module_pos, module in self.model.features._modules.items():
+                #print(x.shape)
                 x = module(x)  # Forward
                 j+=1
-                #print(x.size())
-                #print(j)
-                #print(module_pos)
-                #print(x.shape)
-                try:
-                    if int(module_pos) == self.target_layer:
-                        x.register_hook(self.save_gradient)
-                        conv_output = x  # Save the convolution output on that layer
-                        #print('conv output',x.size())
-                except:
-                    if j == self.target_layer:
-                        x.register_hook(self.save_gradient)
-                        conv_output = x  # Save the convolution output on that layer
-                        #print('conv output',x.size())
 
-        except AttributeError:
+        else:
             j=0
-           # print('ifff.............')
             self.flag=1
 
             for module_pos, module in self.model._modules.items():
                 j+=1
-                #print(x.shape)
-                #print(j)
                 if(j==(len(self.model._modules.items()))):
-                    x= F.max_pool2d(x, kernel_size=x.size()[2:])
+                    if(self.req_max_pool_at_end==True):
+                        x= F.max_pool2d(x, kernel_size=x.size()[2:])
                     x = x.view(x.size(0), -1)
                 x = module(x)  # Forward
-                #print(x.size())
-                try:
-                    if int(module_pos) == self.target_layer:
-                        x.register_hook(self.save_gradient)
-                        conv_output = x  # Save the convolution output on that layer
-                        #print('conv output',x.size())
-                except:
-                    if j == self.target_layer:
-                        x.register_hook(self.save_gradient)
-                        conv_output = x  # Save the convolution output on that layer
-                        #print('conv output',x.size())
-                
 
+        return self.conv_output, x
 
-        return conv_output, x
 
     def forward_pass(self, x):
         """
             Does a full forward pass on the model
         """
         # Forward pass on the convolutions
+        self.set_hooks()
         conv_output, x = self.forward_pass_on_convolutions(x)
         if(self.flag==0):
             #print(flag)
-            x= F.max_pool2d(x, kernel_size=x.size()[2:])
+            if(self.req_max_pool_at_end==True):
+                x= F.max_pool2d(x, kernel_size=x.size()[2:])
             x = x.view(x.size(0), -1)  # Flatten
-           # print('flatten')
-            # Forward pass on the classifier
             x = self.model.classifier(x)
-        #print('classifier',x.size())
-        #print('final-output-shape',(x.shape))
         return conv_output, x
 
 
 class GradCam():
     """
         Produces class activation map
+
+        req_max_pool_at_end perfroms global maxpooling before final classifier layer if required(its required in the case of resnet and densenet)
     """
-    def __init__(self, model, target_layer):
+    def __init__(self, model, target_layer,req_max_pool_at_end=False):
         self.model = model
         self.model.eval()
         # Define extractor
-        self.extractor = CamExtractor(self.model, target_layer)
+        self.extractor = CamExtractor(self.model, target_layer,req_max_pool_at_end)
 
     def generate_cam(self, input_image, target_class=None):
         # Full forward pass
@@ -117,7 +144,6 @@ class GradCam():
         #print('output shapes',model_output.shape,conv_output.shape)
         if target_class is None:
             target_class = np.argmax(model_output.data.numpy())
-        # Target for backprop
         one_hot_output = torch.FloatTensor(1, model_output.size()[-1]).zero_()
         one_hot_output[0][target_class] = 1
         # Zero grads
@@ -132,9 +158,8 @@ class GradCam():
         guided_gradients = self.extractor.gradients.data.numpy()[0]
         # Get convolution outputs
         target = conv_output.data.numpy()[0]
-        #print('target',target.shape)
         # Get weights from gradients
-        #print('guided_gradients',guided_gradients.shape)
+
         weights = np.mean(guided_gradients, axis=(1, 2))  # Take averages for each gradient
         #print(weights.shape)
         # Create empty numpy array for cam

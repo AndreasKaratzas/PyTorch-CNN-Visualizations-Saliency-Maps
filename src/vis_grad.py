@@ -15,7 +15,7 @@ from torchsummary import summary
 
 
 
-def vis_grad(model,class_index,layer,image_path):
+def vis_grad(model,class_index,layer,image_path,req_max_pool_at_end=False):
 	original_image=cv2.imread(image_path,1)
 	#plt.imshow(original_image)
 	#plt.show()
@@ -25,7 +25,7 @@ def vis_grad(model,class_index,layer,image_path):
 
 
     # Grad cam
-	gcv2 = GradCam(model, target_layer=layer)
+	gcv2 = GradCam(model, target_layer=layer,req_max_pool_at_end=req_max_pool_at_end)
 	# Generate cam mask
 	cam = gcv2.generate_cam(prep_img, class_index)
 	print('Grad cam completed')
@@ -43,7 +43,8 @@ def vis_grad(model,class_index,layer,image_path):
 	save_gradient_images(grayscale_cam_gb, file_name_to_export + '_GGrad_Cam_gray')
 	print('Guided grad cam completed')
 
-def vis_gradcam(model,class_index,layer,image_path):
+def vis_gradcam(model,class_index,layer,image_path,req_max_pool_at_end=False):
+
 
 	original_image=cv2.imread(image_path,1)
 	#plt.imshow(original_image)
@@ -54,20 +55,23 @@ def vis_gradcam(model,class_index,layer,image_path):
 
 
     # Grad cam
-	gcv2 = GradCam(model, target_layer=layer)
+	gcv2 = GradCam(model, target_layer=layer,req_max_pool_at_end=req_max_pool_at_end)
 	# Generate cam mask
 	cam = gcv2.generate_cam(prep_img, class_index)
 	print('Grad cam completed')
 
 	save_class_activation_on_image(original_image, cam, file_name_to_export)
 
+
 if __name__ == '__main__':
-	md=models.densenet121(pretrained=True)
-	print(str(md))
+	md=models.alexnet(pretrained=True)
+	md2=models.densenet121(pretrained=True)
+	md3=models.resnet152(pretrained=True)
+	#print(str(md))
 	#print(summary(md,input_size=(3,224,224)))
 	#print(dir(md))
-	vis_grad(md,56,12,'../input_images/snake.jpg')
-	vis_gradcam(md,56,12,'../input_images/snake.jpg')
+	#vis_grad(md2,56,6,'../input_images/snake.jpg')
+	vis_gradcam(md3,56,6,'../input_images/snake.jpg',True)
 
 
 
