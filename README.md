@@ -50,11 +50,11 @@ model_compare(list,497,6,'../input_images/church.jpg')
     
 
 
-![png](output_10_1.png)
+![png](https://github.com/TejaGollapudi/pytorch-cnn-visualizations/blob/master/display/output_10_1.png?raw=true)
 
 
 
-![png](output_10_2.png)
+![png](https://github.com/TejaGollapudi/pytorch-cnn-visualizations/blob/master/display/output_10_2.png?raw=true)
 
 
 ###### Images are automatically saved in result folder
@@ -72,13 +72,13 @@ model_compare_cam(list,497,6,'../input_images/church.jpg')
     
 
 
-![png](output_13_1.png)
+![png](https://github.com/TejaGollapudi/pytorch-cnn-visualizations/blob/master/display/output_13_1.png?raw=true)
 
 
 
-![png](output_13_2.png)
+![png](https://github.com/TejaGollapudi/pytorch-cnn-visualizations/blob/master/display/output_13_2.png?raw=true)
 
 
 
-![png](output_13_3.png)
+![png](https://github.com/TejaGollapudi/pytorch-cnn-visualizations/blob/master/display/output_13_3.png?raw=true)
 
