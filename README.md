@@ -1,5 +1,6 @@
 
 # Demo for visualizing CNNs using Grad_cam and Guided_Grad_Gam
+#### Sivateja Gollapudi
 
 ###### vis_grad file contains model_compare function which is used to visualize guided_gradcam_back_prop and model_compare_cam perfroms grad_cam
 
