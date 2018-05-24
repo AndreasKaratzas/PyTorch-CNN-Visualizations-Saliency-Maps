@@ -21,11 +21,8 @@ def guided_grad_cam(grad_cam_mask, guided_backprop_mask):
         grad_cam_mask (np_arr): Class activation map mask
         guided_backprop_mask (np_arr):Guided backprop mask
     """
-    print(grad_cam_mask.shape)
-    print(guided_backprop_mask)
     cam_gb = np.multiply(grad_cam_mask, guided_backprop_mask)
     return cam_gb
-
 
 if __name__ == '__main__':
     # Get params

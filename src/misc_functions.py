@@ -50,7 +50,6 @@ def save_gradient_images(gradient, file_name):
     path_to_file = os.path.join('../results', file_name + '.jpg')
     # Convert RBG to GBR
     gradient = gradient[..., ::-1]
-    #print(gradient.shape)
     if(gradient.shape[2]==1):
         gradient.reshape((gradient.shape[0],gradient.shape[1]))
         #gradient=np.squeeze(gradient, axis=(2,)).shape
@@ -96,7 +95,7 @@ def save_class_activation_on_image(org_img, activation_map, file_name):
     cv2.imwrite(path_to_file, np.uint8(255 * img_with_heatmap))
     print('activation_heatmap on image')
 
-    a=hsv_to_rgb(255*img_with_heatmap)
+   
     plt.imshow(img_with_heatmap)
     plt.show()
 
@@ -207,3 +206,4 @@ def get_params(example_index):
             target_class,
             file_name_to_export,
             pretrained_model)
+

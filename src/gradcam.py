@@ -28,6 +28,7 @@ class CamExtractor():
 
     def save_gradient(self,module,gradin,gradout):
 
+
         self.gradients = gradout[0]
 
 
@@ -172,7 +173,7 @@ class GradCam():
         cam = cv2.resize(cam, (224, 224))
         #print(cam)
         cam = np.maximum(cam, 0)
-        cam = (cam - np.min(cam)) / (np.max(cam) - np.min(cam))  # Normalize between 0-1
+        cam = (cam - np.min(cam)) / (np.max(cam) - np.min(cam)+ 10**-6)  # Normalize between 0-1
         cam = np.uint8(cam * 255)  # Scale between 0-255 to visualize
         return cam
 
