@@ -1,8 +1,6 @@
 
 # Demo for visualizing CNNs using Guided_Grad_Gam and Grad_cam
 
-#### Sivateja Gollapudi
-
 ###### vis_grad file contains model_compare function which is used to visualize guided_gradcam_back_prop and model_compare_cam perfroms grad_cam
 
 
@@ -63,11 +61,12 @@ model_compare(list,56,6,'../input_images/snake.jpg')
     
 
 
-![png](https://github.com/TejaGollapudi/pytorch-cnn-visualizations/blob/master/display/output_10_1.png?raw=true)
+![png](output_12_1.png)
 
 
 
-![png](https://github.com/TejaGollapudi/pytorch-cnn-visualizations/blob/master/display/output_10_2.png?raw=true)
+![png](output_12_2.png)
+
 
 ###### Images are automatically saved in result folder
 
@@ -85,14 +84,13 @@ model_compare_cam(list,56,10,'../input_images/snake.jpg')
     
 
 
-![png](https://github.com/TejaGollapudi/pytorch-cnn-visualizations/blob/master/display/output_13_1.png?raw=true)
+![png](output_15_1.png)
 
 
 
-![png](https://github.com/TejaGollapudi/pytorch-cnn-visualizations/blob/master/display/output_13_2.png?raw=true)
+![png](output_15_2.png)
 
 
 
-![png](https://github.com/TejaGollapudi/pytorch-cnn-visualizations/blob/master/display/output_13_3.png?raw=true)
-
+![png](output_15_3.png)
 

@@ -17,10 +17,9 @@ class CamExtractor():
         Extracts cam features from the model
     """
 
-    def __init__(self, model, target_layer,req_max_pool_at_end):
+    def __init__(self, model, target_layer):
         self.model = model
         self.target_layer = target_layer
-        self.req_max_pool_at_end=req_max_pool_at_end
         self.gradients = None
         self.flag=0
         self.conv_output=None
@@ -82,31 +81,7 @@ class CamExtractor():
                 reach_layer(module)
 
 
-    def forward_pass_on_convolutions(self, x):
-        """
-            Does a forward pass on convolutions, hooks the function at given layer
-        """
-        conv_output = None
-        if hasattr(self.model, 'features'):
-            j=0
-            for module_pos, module in self.model.features._modules.items():
-                #print(x.shape)
-                x = module(x)  # Forward
-                j+=1
-
-        else:
-            j=0
-            self.flag=1
-
-            for module_pos, module in self.model._modules.items():
-                j+=1
-                if(j==(len(self.model._modules.items()))):
-                    if(self.req_max_pool_at_end==True):
-                        x= F.max_pool2d(x, kernel_size=x.size()[2:])
-                    x = x.view(x.size(0), -1)
-                x = module(x)  # Forward
-
-        return self.conv_output, x
+    
 
 
     def forward_pass(self, x):
@@ -115,29 +90,23 @@ class CamExtractor():
         """
         # Forward pass on the convolutions
         self.set_hooks()
-        conv_output, x = self.forward_pass_on_convolutions(x)
-        if(self.flag==0):
-            #print(flag)
-            if(self.req_max_pool_at_end==True):
-                x= F.max_pool2d(x, kernel_size=x.size()[2:])
-            x = x.view(x.size(0), -1)  # Flatten
-            x = self.model.classifier(x)
-        return conv_output, x
+        x = self.model(x)
+        
+        return self.conv_output, x
 
 
 class GradCam():
     """
         Produces class activation map
 
-        req_max_pool_at_end perfroms global maxpooling before final classifier layer if required(its required in the case of resnet and densenet)
-    """
-    def __init__(self, model, target_layer,req_max_pool_at_end=False):
+       """
+    def __init__(self, model, target_layer):
         self.model = model
         self.model.eval()
         # Define extractor
-        self.extractor = CamExtractor(self.model, target_layer,req_max_pool_at_end)
+        self.extractor = CamExtractor(self.model, target_layer)
 
-    def generate_cam(self, input_image, target_class=None):
+    def generate_cam(self, input_image, target_class=None,size=[224,224]):
         # Full forward pass
         # conv_output is the output of convolutions at specified layer
         # model_output is the final output of the model (1, 1000)
@@ -170,7 +139,7 @@ class GradCam():
         for i, w in enumerate(weights):
             cam += w * target[i, :, :]
         #print('cam',cam)
-        cam = cv2.resize(cam, (224, 224))
+        cam = cv2.resize(cam, (size[0], size[1]))
         #print(cam)
         cam = np.maximum(cam, 0)
         cam = (cam - np.min(cam)) / (np.max(cam) - np.min(cam)+ 10**-6)  # Normalize between 0-1

@@ -47,4 +47,5 @@ if __name__ == '__main__':
     save_gradient_images(cam_gb, file_name_to_export + '_GGrad_Cam')
     grayscale_cam_gb = convert_to_grayscale(cam_gb)
     save_gradient_images(grayscale_cam_gb, file_name_to_export + '_GGrad_Cam_gray')
-    print('Guided grad cam completed')
+    print('Guided grad cam completed \n')
+

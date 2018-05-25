@@ -88,7 +88,7 @@ def save_class_activation_on_image(org_img, activation_map, file_name):
     plt.imshow(activation_heatmap)
     plt.show()
     # Heatmap on picture
-    org_img = cv2.resize(org_img, (224, 224))
+    org_img = cv2.resize(org_img, (299, 299))
     img_with_heatmap = np.float32(activation_heatmap) + np.float32(org_img)
     img_with_heatmap = img_with_heatmap / np.max(img_with_heatmap)
     path_to_file = os.path.join('../results', file_name+'_Cam_On_Image.jpg')
@@ -100,7 +100,7 @@ def save_class_activation_on_image(org_img, activation_map, file_name):
     plt.show()
 
 
-def preprocess_image(cv2im, resize_im=True):
+def preprocess_image(cv2im,size,resize_im=True,):
     """
         Processes image for CNNs
 
@@ -115,7 +115,7 @@ def preprocess_image(cv2im, resize_im=True):
     std = [0.229, 0.224, 0.225]
     # Resize image
     if resize_im:
-        cv2im = cv2.resize(cv2im, (224,224))
+        cv2im = cv2.resize(cv2im, (size[0],size[1]))
     im_as_arr = np.float32(cv2im)
     im_as_arr = np.ascontiguousarray(im_as_arr[..., ::-1])
     im_as_arr = im_as_arr.transpose(2, 0, 1)  # Convert array to D,W,H

@@ -15,11 +15,11 @@ import numpy as np
 import os
 
 
-def act_on_img(org_img, activation_map):
+def act_on_img(org_img, activation_map,size):
 
     activation_heatmap = cv2.applyColorMap(activation_map, cv2.COLORMAP_HSV)
 
-    org_img = cv2.resize(org_img, (224, 224))
+    org_img = cv2.resize(org_img, (size[0], size[1]))
     img_with_heatmap = np.float32(activation_heatmap) + np.float32(org_img)
     img_with_heatmap = img_with_heatmap / np.max(img_with_heatmap)
     return img_with_heatmap, activation_heatmap
@@ -34,18 +34,18 @@ def trans(gradient):
 
 
 
-def vis_grad(model,class_index,layer,image_path,req_max_pool_at_end=False):
+def vis_grad(model,class_index,layer,image_path,size=[224,224]):
 	original_image=cv2.imread(image_path,1)
 	#plt.imshow(original_image)
 	#plt.show()
-	prep_img=    prep_img = preprocess_image(original_image)
+	prep_img = preprocess_image(original_image,size)
 	file_name_to_export ='model'+'_classindex_'+str(class_index)+'-layer_'+ str(layer)
 
 
     # Grad cam
-	gcv2 = GradCam(model, target_layer=layer,req_max_pool_at_end=req_max_pool_at_end)
+	gcv2 = GradCam(model, target_layer=layer)
 	# Generate cam mask
-	cam = gcv2.generate_cam(prep_img, class_index)
+	cam = gcv2.generate_cam(prep_img, class_index,size)
 	print('Grad cam completed')
 
     # Guided backprop
@@ -67,24 +67,24 @@ def vis_grad(model,class_index,layer,image_path,req_max_pool_at_end=False):
 
 	return cam_gb,grayscale_cam_gb
 
-def vis_gradcam(model,class_index,layer,image_path,req_max_pool_at_end=False):
+def vis_gradcam(model,class_index,layer,image_path,size=[224,224]):
 
 
 	original_image=cv2.imread(image_path,1)
 	#plt.imshow(original_image)
 	#plt.show()
-	prep_img = preprocess_image(original_image)
+	prep_img = preprocess_image(original_image,size)
 	file_name_to_export ='model'+'_classindex_'+str(class_index)+'-layer_'+ str(layer)
 
 
     # Grad cam
-	gcv2 = GradCam(model, target_layer=layer,req_max_pool_at_end=req_max_pool_at_end)
+	gcv2 = GradCam(model, target_layer=layer)
 	# Generate cam mask
-	cam = gcv2.generate_cam(prep_img, class_index)
+	cam = gcv2.generate_cam(prep_img, class_index,size)
 	print('Grad cam completed')
 
 	#save_class_activation_on_image(original_image, cam, file_name_to_export)
-	img_with_heatmap,activation_heatmap=act_on_img(original_image,cam)
+	img_with_heatmap,activation_heatmap=act_on_img(original_image,cam,size)
 
 	return cam,activation_heatmap,img_with_heatmap
 
@@ -100,10 +100,10 @@ def model_compare(listm,class_index,layer,image_path):
 
 	for i in listm :
 
-		x,y=vis_grad(i[0],class_index,layer,image_path,i[1])
+		x,y=vis_grad(i[0],class_index,layer,image_path,i[2])
 		grad.append(x)
 		grey.append(y)
-		name.append(i[2])
+		name.append(i[1])
 
 	for i in name:
 		s=s+'__'+i
@@ -154,11 +154,11 @@ def model_compare_cam(listm,class_index,layer,image_path):
 	
 	for i in listm :
 
-		x,y,z=vis_gradcam(i[0],class_index,layer,image_path,i[1])
+		x,y,z=vis_gradcam(i[0],class_index,layer,image_path,i[2])
 		cam.append(x)
 		hmap.append(y)
 		ihmap.append(z)
-		name.append(i[2])
+		name.append(i[1])
 
 	for i in name:
 		s=s+'__'+i
@@ -218,16 +218,17 @@ if __name__ == '__main__':
 	md=models.alexnet(pretrained=True)
 	md2=models.densenet121(pretrained=True)
 	md3=models.resnet152(pretrained=True)
+
 	#print(str(md))
 	#print(summary(md,input_size=(3,224,224)))
 	#print(dir(md))
 	#vis_grad(md2,56,6,'../input_images/snake.jpg')
-	list=[[md,False,'alexnet'],[md2,True,'densenet121'],[md3,True,'resnet152']]
+	list=[[md,'alexnet',[224,224]]]
 
 	#vis_gradcam(md3,56,6,'../input_images/snake.jpg',True)
 	#model_compare(list,56,6,'../input_images/snake.jpg')
 
-	model_compare_cam(list,56,6,'../input_images/snake.jpg')
+	model_compare(list,56,6,'../input_images/snake.jpg')
 
 
 
